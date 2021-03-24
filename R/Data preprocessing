@@ -17,7 +17,6 @@ dataset$Purchased = factor(dataset$Purchased,
                            labels = c(0,1))   
 
 library(caTools)
-set.seed(123) 
 split = sample.split(dataset$Purchased,   
                      SplitRatio = 0.8)    
 
