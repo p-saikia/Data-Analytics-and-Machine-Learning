@@ -1,0 +1,45 @@
+library(rpart) 
+library(rpart.plot) 
+library(RWeka) 
+library(MLmetrics)
+library(caret)
+library(vip)
+library(plyr)
+library(readr)
+library(dplyr)
+library(ggplot2)
+rm (list=ls())
+cat("\014") 
+location_set <- read.csv('data_set_1.csv')
+str(location_set)
+summary(location_set)
+train_sample <- sample.int(n = nrow(location_set), size = floor(.75*nrow(location_set)), replace = F)
+loc_train <- location_set[train_sample,]
+loc_test <- location_set[-train_sample,]
+wind_direction.model <- rpart(wind_direction ~  air_temperature_mean + humidity + pressure + radiation_direct + radiation_global , data = loc_train) 
+plotcp(wind_direction.model)
+wind_speed.model <- rpart(wind_speed ~  air_temperature_mean + humidity + pressure + radiation_direct + radiation_global , data = loc_train) 
+plotcp(wind_speed.model)
+summary(wind_direction.model)
+summary(wind_speed.model)
+rpart.plot(wind_direction.model, digits = 4, fallen.leaves = T, type = 1, extra = 101) 
+rpart.plot(wind_speed.model, digits = 4, fallen.leaves = T, type = 1, extra = 101) 
+eval.wind_direction <- unname(predict(wind_direction.model, loc_test))
+eval.wind_speed <- unname(predict(wind_speed.model, loc_test))
+RMSE(eval.wind_direction, loc_test$wind_direction)
+RMSE(eval.wind_speed, loc_test$wind_speed)
+eval_results <- function(true, predicted) {
+  SSE <- sum((predicted - true)^2)
+  SST <- sum((true - mean(true))^2)
+  R_square <- 1 - SSE / SST
+  
+  
+  
+  data.frame(
+    
+    Rsquare = R_square
+  )
+  
+}
+eval_results(loc_test$wind_direction, eval.wind_direction)
+eval_results(loc_test$wind_speed, eval.wind_speed)
