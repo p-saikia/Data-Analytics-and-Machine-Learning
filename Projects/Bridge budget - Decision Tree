@@ -1,112 +1,23 @@
-library(neuralnet) 
-library(MLmetrics) 
 rm (list=ls())
 cat("\014") 
-data <- read.csv('traffic_noise.csv')
+library(C50)
+library(lattice)
+library(ggplot2)
+library(caret)
+data <- read.csv('bridge.csv')
 str(data)
 summary(data)
-normalize <- function(x) {
-  return ((x- min(x)) / (max(x) - min(x)))
-}
-data_norm <- as.data.frame(lapply(data, normalize))
-train_sample <- sample(2136, 1602)
-noise_train <- data_norm[train_sample,]
-noise_test <- data_norm[-train_sample,]
-summary(noise_train)
-summary(noise_test)
-noise_model_P <- neuralnet(CPXP ~ height + tilt + age + lane, data = noise_train)
-plot(noise_model_P)
-summary(noise_model_P)
-model_results_P <- compute(noise_model_P, noise_test[1:4])
-predicted_noise_P <- model_results_P$net.result
-RMSE(predicted_noise_P, noise_test$CPXP)
-RMSE(noise_model_P$net.result[[1]], noise_train$CPXP)
-noise_model2_P <- neuralnet(CPXP ~ height + tilt + age + lane, data = noise_train, hidden = 5)
-noise_model3_P <- neuralnet(CPXP ~ height + tilt + age + lane, data = noise_train, hidden = c(5,5,5))
-plot(noise_model2_P)
-plot(noise_model3_P)
-noise_model4_P <- neuralnet(CPXP ~ height + tilt + age + lane, data = noise_train, hidden = c(5,5,5,5))
-noise_model5_P <- neuralnet(CPXP ~ height + tilt + age + lane, data = noise_train, hidden = c(10,10,10))
-noise_model7_P <- neuralnet(CPXP ~ height + tilt + age + lane, data = noise_train, hidden = c(7,7,7))
-noise_model_P$result.matrix
-RMSE(noise_model2_P$net.result[[1]], noise_train$CPXP)
-noise_model2_P$result.matrix
-RMSE(noise_model3_P$net.result[[1]], noise_train$CPXP)
-noise_model3_P$result.matrix
-RMSE(noise_model4_P$net.result[[1]], noise_train$CPXP)
-noise_model4_P$result.matrix
-RMSE(noise_model5_P$net.result[[1]], noise_train$CPXP)
-noise_model5_P$result.matrix
-RMSE(noise_model7_P$net.result[[1]], noise_train$CPXP)
-noise_model7_P$result.matrix
-model_results2_P <- compute(noise_model2_P, noise_test[1:4])
-predicted_noise2_P <- model_results2_P$net.result
-model_results3_P <- compute(noise_model3_P, noise_test[1:4])
-predicted_noise3_P <- model_results3_P$net.result
-model_results4_P <- compute(noise_model4_P, noise_test[1:4])
-predicted_noise4_P <- model_results4_P$net.result
-model_results5_P <- compute(noise_model5_P, noise_test[1:4])
-predicted_noise5_P <- model_results5_P$net.result
-model_results7_P <- compute(noise_model7_P, noise_test[1:4])
-predicted_noise7_P <- model_results7_P$net.result
-RMSE(noise_model2_P$net.result[[1]], noise_train$CPXP)
-RMSE(noise_model3_P$net.result[[1]], noise_train$CPXP)
-RMSE(noise_model4_P$net.result[[1]], noise_train$CPXP)
-RMSE(noise_model5_P$net.result[[1]], noise_train$CPXP)
-RMSE(noise_model7_P$net.result[[1]], noise_train$CPXP)
-noise_model_H <- neuralnet(CPXH ~ height + tilt + age + lane, data = noise_train)
-model_results_H <- compute(noise_model_H, noise_test[1:4])
-predicted_noise_H <- model_results_H$net.result
-noise_model_H$result.matrix
-summary(noise_train)
-summary(noise_test)
-RMSE(predicted_noise_H, noise_test$CPXH)
-RMSE(noise_model_H$net.result[[1]], noise_train$CPXH)
-noise_model2_H <- neuralnet(CPXH ~ height + tilt + age + lane, data = noise_train, hidden = 5)
-noise_model3_H <- neuralnet(CPXH ~ height + tilt + age + lane, data = noise_train, hidden = c(5,5,5))
-noise_model4_H <- neuralnet(CPXH ~ height + tilt + age + lane, data = noise_train, hidden = c(5,5,5,5))
-noise_model5_H <- neuralnet(CPXH ~ height + tilt + age + lane, data = noise_train, hidden = c(10,10,10))
-noise_model7_H <- neuralnet(CPXH ~ height + tilt + age + lane, data = noise_train, hidden = c(7,7,7))
-noise_model8_H <- neuralnet(CPXH ~ height + tilt + age + lane, data = noise_train, hidden = c(5,5))
-noise_model9_H <- neuralnet(CPXH ~ height + tilt + age + lane, data = noise_train, hidden = c(2,2,2))
-noise_model10_H <- neuralnet(CPXH ~ height + tilt + age + lane, data = noise_train, hidden = c(8,8,8))
-RMSE(noise_model2_H$net.result[[1]], noise_train$CPXH)
-noise_model2_H$result.matrix
-RMSE(noise_model3_H$net.result[[1]], noise_train$CPXH)
-noise_model3_H$result.matrix
-RMSE(noise_model4_H$net.result[[1]], noise_train$CPXH)
-noise_model4_H$result.matrix
-RMSE(noise_model5_H$net.result[[1]], noise_train$CPXH)
-noise_model5_H$result.matrix
-RMSE(noise_model7_H$net.result[[1]], noise_train$CPXH)
-noise_model7_H$result.matrix
-RMSE(noise_model8_H$net.result[[1]], noise_train$CPXH)
-noise_model8_H$result.matrix
-RMSE(noise_model9_H$net.result[[1]], noise_train$CPXH)
-noise_model9_H$result.matrix
-RMSE(noise_model10_H$net.result[[1]], noise_train$CPXH)
-noise_model10_H$result.matrix
-model_results2_H <- compute(noise_model2_H, noise_test[1:4])
-predicted_noise2_H <- model_results2_H$net.result
-model_results3_H <- compute(noise_model3_H, noise_test[1:4])
-predicted_noise3_H <- model_results3_H$net.result
-model_results4_H <- compute(noise_model4_H, noise_test[1:4])
-predicted_noise4_H <- model_results4_H$net.result
-model_results5_H <- compute(noise_model5_H, noise_test[1:4])
-predicted_noise5_H <- model_results5_H$net.result
-model_results7_H <- compute(noise_model7_H, noise_test[1:4])
-predicted_noise7_H <- model_results7_H$net.result
-model_results8_H <- compute(noise_model8_H, noise_test[1:4])
-predicted_noise8_H <- model_results8_H$net.result
-model_results9_H <- compute(noise_model9_H, noise_test[1:4])
-predicted_noise9_H <- model_results9_H$net.result
-model_results10_H <- compute(noise_model10_H, noise_test[1:4])
-predicted_noise10_H <- model_results10_H$net.result
-RMSE(noise_model2_H$net.result[[1]], noise_train$CPXH)
-RMSE(noise_model3_H$net.result[[1]], noise_train$CPXH)
-RMSE(noise_model4_H$net.result[[1]], noise_train$CPXH)
-RMSE(noise_model5_H$net.result[[1]], noise_train$CPXH)
-RMSE(noise_model7_H$net.result[[1]], noise_train$CPXH)
-RMSE(noise_model8_H$net.result[[1]], noise_train$CPXH)
-RMSE(noise_model9_H$net.result[[1]], noise_train$CPXH)
-RMSE(noise_model10_H$net.result[[1]], noise_train$CPXH)
+data$addbudget <- ifelse(data$TOTAL_IMP_COST_096 > median(data$TOTAL_IMP_COST_096), "OB", "NOB")
+train_sample <- createDataPartition(y=data$addbudget, p=0.9, list = FALSE)
+bridge_train <- data[train_sample,]
+bridge_test <- data[-train_sample,]
+bridge_model <- C5.0(bridge_train[-c(1, 2, 22, 23)], as.factor(bridge_train$addbudget))
+summary(bridge_model)
+plot(bridge_model)
+bridge_pred <- predict(bridge_model, bridge_test)
+confusionMatrix(as.factor(bridge_pred), as.factor(bridge_test$addbudget), positive = "NOB")
+bridge_model_boost <- C5.0(bridge_train[-c(1, 2, 22, 23)], as.factor(bridge_train$addbudget), trials=10)
+summary(bridge_model_boost)
+plot(bridge_model_boost)
+bridge_pred_boost <- predict(bridge_model_boost, bridge_test)
+confusionMatrix(as.factor(bridge_pred_boost), as.factor(bridge_test$addbudget), positive = "NOB")
