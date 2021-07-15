@@ -1,0 +1,57 @@
+library(psych)
+library(cluster)
+library(fpc)
+library(class)
+library(lattice)
+library(ggplot2)
+library(caret)
+library(e1071)
+rm (list=ls())
+cat("\014") 
+data <- read.csv('data_set_1.csv')
+str(data)
+summary(data)
+data <- data[-c(1)]
+data$wind_speed[1]
+speed_min=min(data$wind_speed)
+speed_max=max(data$wind_speed)
+band=max(data$wind_speed)-min(data$wind_speed)
+data <- within(data, {   
+  speed.cat <- NA 
+  speed.cat[wind_speed < (speed_min+0.25*band)] <- "Low"
+  speed.cat[wind_speed >= (speed_min+0.25*band) & wind_speed < (speed_min+0.50*band)] <- "Middle"
+  speed.cat[wind_speed >= (speed_min+0.50*band)] <- "High"
+} ) 
+data <- within(data, {   
+  dir.cat <- NA 
+  dir.cat[22.5 <= wind_direction  & wind_direction< 67.5] <- 'NE'
+  dir.cat[67.5 <= wind_direction & wind_direction< 112.5] <- 'E'
+  dir.cat[112.5 <= wind_direction & wind_direction < 157.5] <- 'SE'
+  dir.cat[157.5 <= wind_direction & wind_direction < 202.5] <- 'S'
+  dir.cat[202.5 <= wind_direction & wind_direction < 247.5] <- 'SW'
+  dir.cat[247.5 <= wind_direction & wind_direction < 292.5] <- 'W'
+  dir.cat[292.5 <= wind_direction & wind_direction < 337.5] <- 'NW'
+  dir.cat[337.5 <= wind_direction & wind_direction <= 360] <- 'N'
+  dir.cat[0 <= wind_direction  & wind_direction < 22.5] <- 'N'
+  
+} )
+data <- data[-c(11,12)]
+summary(data)
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+data_n <- as.data.frame(lapply(data[1:10], normalize))
+train_sample <- createDataPartition(y=data$speed.cat, p=0.9, list = FALSE)
+data_train <- data_n[train_sample, ]
+data_test <- data_n[-train_sample, ]
+data_train_labels <- data$speed.cat[train_sample]
+data_test_labels <- data$speed.cat[-train_sample]
+data_test_pred_speed <- knn(train=data_train, test=data_test, cl= data_train_labels, k= 100)
+confusionMatrix(as.factor(data_test_pred_speed), as.factor(data_test_labels), positive= "High")
+train_sample <- createDataPartition(y=data$dir.cat, p=0.9, list = FALSE)
+data_train <- data_n[train_sample, ]
+data_test <- data_n[-train_sample, ]
+data_train_labels <- data$dir.cat[train_sample]
+data_test_labels <- data$dir.cat[-train_sample]
+data_test_pred_dir <- knn(train=data_train, test=data_test, cl= data_train_labels, k= 3)
+confusionMatrix(as.factor(data_test_pred_dir), as.factor(data_test_labels), positive= "N")
