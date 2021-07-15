@@ -1,0 +1,36 @@
+library("ncdf4")
+library("reshape2")
+library("dplyr")
+library("RcppRoll")
+library("neuralnet")
+library("MLmetrics")
+library(ggplot2)
+rm (list=ls())
+library(neuralnet)
+library(MLmetrics)
+data <- read.csv('data_set_2.csv')
+wind_direction <- data$Avg.Wind.Direction...10m..deg.
+wind_direction[is.na(wind_direction)] <- mean(wind_direction, na.rm = TRUE)
+wind_direction_rollavg_7 <- roll_mean(wind_direction, n=7)
+wind_direction_max_7 <- roll_max(wind_direction, n=7)
+wind_direction_min_7 <- roll_min(wind_direction, n=7)
+wind_direction_sd_7 <- roll_sd(wind_direction, n=7)
+wind_direction_feature <- data.frame(wind_direction[7:nrow(data)], wind_direction_rollavg_7, wind_direction_max_7, wind_direction_min_7, wind_direction_sd_7)
+cn=colnames(wind_direction_feature[1])
+names(wind_direction_feature)[names(wind_direction_feature)==paste0(cn)]<- "wind_direction"
+normalize <- function(x) {
+  return ((x- min(x)) / (max(x) - min(x)))
+}
+wind_direction_feature_norm <- as.data.frame(lapply(wind_direction_feature, normalize))
+total=nrow(wind_direction_feature)
+first_75=round(0.75*total)
+wind_direction_feature_norm_train = wind_direction_feature_norm[1:first_75,]
+wind_direction_feature_norm_test = wind_direction_feature_norm[first_75:total,]
+wind_direction_model <- neuralnet(wind_direction ~ wind_direction_rollavg_7 +wind_direction_max_7 + wind_direction_min_7 + wind_direction_sd_7, data = wind_direction_feature_norm_train, 
+                              c(5))
+ 
+wind_direction_predicted <- neuralnet::compute(wind_direction_model, wind_direction_feature_norm_test[1:4])
+predicted_wind_direction  <- wind_direction_predicted$net.result
+MSE(wind_direction_model$net.result[[1]], wind_direction_feature_norm_train$wind_direction)
+MSE(predicted_wind_direction[,1], wind_direction_feature_norm_test$wind_direction)
+plot(wind_direction_model)
