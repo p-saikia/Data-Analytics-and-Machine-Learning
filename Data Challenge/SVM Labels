@@ -1,33 +1,30 @@
-library(rpart) 
-library(rpart.plot) 
-library(RWeka) 
-library(MLmetrics)
+library(kernlab)
 library(caret)
-library(vip)
-library(plyr)
-library(readr)
-library(dplyr)
-library(ggplot2)
+library(e1071)
+library(calibrate)
+library(datasets.load)
+library(RSNNS)
 rm (list=ls())
 cat("\014") 
-location_set <- read.csv('data_set_1.csv')
+location_set <- read.csv("data_set_1.csv")
 str(location_set)
 summary(location_set)
-train_sample <- sample.int(n = nrow(location_set), size = floor(.75*nrow(location_set)), replace = F)
-loc_train <- location_set[train_sample,]
-loc_test <- location_set[-train_sample,]
-wind_direction.model <- rpart(wind_direction ~  air_temperature_mean + humidity + pressure + radiation_direct + radiation_global , data = loc_train) 
-plotcp(wind_direction.model)
-wind_speed.model <- rpart(wind_speed ~  air_temperature_mean + humidity + pressure + radiation_direct + radiation_global , data = loc_train) 
-plotcp(wind_speed.model)
-summary(wind_direction.model)
-summary(wind_speed.model)
-rpart.plot(wind_direction.model, digits = 4, fallen.leaves = T, type = 1, extra = 101) 
-rpart.plot(wind_speed.model, digits = 4, fallen.leaves = T, type = 1, extra = 101) 
-eval.wind_direction <- unname(predict(wind_direction.model, loc_test))
-eval.wind_speed <- unname(predict(wind_speed.model, loc_test))
-RMSE(eval.wind_direction, loc_test$wind_direction)
-RMSE(eval.wind_speed, loc_test$wind_speed)
+location_set.scale <- data.frame(scale(location_set[, 2:13], center = TRUE, scale = TRUE))
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+location_set.scale <- as.data.frame(lapply(location_set[, 2:13] , normalize))
+train_sample <- createDataPartition(y=location_set.scale$wind_direction, p=0.75, list = FALSE)
+location_set_train <- location_set.scale[train_sample,]
+location_set_test <- location_set.scale[-train_sample,]
+location_set_model_rbfdot_wind_speed <- ksvm( wind_speed ~ pressure + radiation_direct + humidity + radiation_global + air_temperature_mean ,data = location_set_train, kernel = "rbfdot")
+location_set_model_rbfdot_wind_direction <- ksvm( wind_direction ~ pressure + radiation_direct + humidity + radiation_global + air_temperature_mean , data = location_set_train, kernel = "rbfdot")
+location_set_pred_rbfdot_wind_speed <- predict(location_set_model_rbfdot_wind_speed, location_set_test)
+location_set_pred_rbfdot_wind_direction <- predict(location_set_model_rbfdot_wind_direction, location_set_test)
+location_set_model_rbfdot_wind_speed@error
+location_set_model_rbfdot_wind_direction@error
+RMSE(location_set_pred_rbfdot_wind_speed,location_set_test$wind_speed)
+RMSE(location_set_pred_rbfdot_wind_direction,location_set_test$wind_direction)
 eval_results <- function(true, predicted) {
   SSE <- sum((predicted - true)^2)
   SST <- sum((true - mean(true))^2)
@@ -41,5 +38,5 @@ eval_results <- function(true, predicted) {
   )
   
 }
-eval_results(loc_test$wind_direction, eval.wind_direction)
-eval_results(loc_test$wind_speed, eval.wind_speed)
+eval_results(location_set_test$wind_speed, location_set_pred_rbfdot_wind_speed)
+eval_results(location_set_test$wind_direction, location_set_pred_rbfdot_wind_direction)
