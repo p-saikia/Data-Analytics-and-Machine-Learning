@@ -1,0 +1,62 @@
+library(kernlab)
+library(caret)
+library(e1071)
+library(calibrate)
+library(datasets.load)
+library(RSNNS)
+rm (list=ls())
+cat("\014") 
+location_set <- read.csv("data_set_1.csv")
+str(location_set)
+summary(location_set)
+location_set.scale <- data.frame(scale(location_set[, 2:13], center = TRUE, scale = TRUE))
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+location_set.scale <- as.data.frame(lapply(location_set[, 2:13] , normalize))
+train_sample <- createDataPartition(y=location_set.scale$wind_direction, p=0.75, list = FALSE)
+location_set_train <- location_set.scale[train_sample,]
+location_set_test <- location_set.scale[-train_sample,]
+location_set_model_rbfdot_pressure <- ksvm(pressure ~ x + y + time, data = location_set_train, kernel = "rbfdot")
+location_set_model_rbfdot_humidity <- ksvm(humidity ~ x + y + time, data = location_set_train, kernel = "rbfdot")
+location_set_model_rbfdot_radiationdirect <- ksvm(radiation_direct ~ x + y + time, data = location_set_train, kernel = "rbfdot")
+location_set_model_rbfdot_radiationglobal <- ksvm(radiation_global ~ x + y + time, data = location_set_train, kernel = "rbfdot")
+location_set_model_rbfdot_airtemperature <- ksvm(air_temperature_mean ~ x + y + time, data = location_set_train, kernel = "rbfdot")
+location_set_model_rbfdot_dewpoint <- ksvm(dew_point ~ x + y + time, data = location_set_train, kernel = "rbfdot")
+location_set_pred_rbfdot_pressure <- predict(location_set_model_rbfdot_pressure, location_set_test)
+location_set_pred_rbfdot_humidity <- predict(location_set_model_rbfdot_humidity, location_set_test)
+location_set_pred_rbfdot_radiationdirect <- predict(location_set_model_rbfdot_radiationdirect, location_set_test)
+location_set_pred_rbfdot_radiationglobal <- predict(location_set_model_rbfdot_radiationglobal, location_set_test)
+location_set_pred_rbfdot_airtemperature <- predict(location_set_model_rbfdot_airtemperature, location_set_test)
+location_set_pred_rbfdot_dewpoint <- predict(location_set_model_rbfdot_dewpoint, location_set_test)
+location_set_model_rbfdot_pressure@error
+location_set_model_rbfdot_humidity@error
+location_set_model_rbfdot_radiationdirect@error
+location_set_model_rbfdot_radiationglobal@error
+location_set_model_rbfdot_airtemperature@error
+location_set_model_rbfdot_airtemperature@error
+RMSE(location_set_pred_rbfdot_pressure,location_set_test$pressure)
+RMSE(location_set_pred_rbfdot_humidity,location_set_test$humidity)
+RMSE(location_set_pred_rbfdot_radiationdirect,location_set_test$radiation_direct)
+RMSE(location_set_pred_rbfdot_radiationglobal,location_set_test$radiation_global)
+RMSE(location_set_pred_rbfdot_airtemperature,location_set_test$air_temperature_mean)
+RMSE(location_set_pred_rbfdot_dewpoint,location_set_test$dew_point)
+eval_results <- function(true, predicted) {
+  SSE <- sum((predicted - true)^2)
+  SST <- sum((true - mean(true))^2)
+  R_square <- 1 - SSE / SST
+  
+  
+  
+  data.frame(
+    
+    Rsquare = R_square
+  )
+  
+}
+eval_results(location_set_test$pressure, location_set_pred_rbfdot_pressure)
+eval_results(location_set_test$humidity, location_set_pred_rbfdot_humidity)
+eval_results(location_set_test$radiation_direct, location_set_pred_rbfdot_radiationdirect)
+eval_results(location_set_test$radiation_global, location_set_pred_rbfdot_radiationglobal)
+eval_results(location_set_test$air_temperature_mean, location_set_pred_rbfdot_airtemperature)
+eval_results(location_set_test$dew_point, location_set_pred_rbfdot_dewpoint)
