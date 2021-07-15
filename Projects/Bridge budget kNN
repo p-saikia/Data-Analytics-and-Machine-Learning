@@ -1,0 +1,29 @@
+library(class)
+library(lattice)
+library(ggplot2)
+library(caret)
+library(e1071)
+rm (list=ls())
+cat("\014") 
+data <- read.csv('bridge.csv')
+str(data)
+summary(data)
+data <- data[-c(1:2)]
+data$addbudget <- ifelse(data$TOTAL_IMP_COST_096 > median(data$TOTAL_IMP_COST_096), "OB", "NOB")
+data <- data[-20]
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+data_n <- as.data.frame(lapply(data[1:19], normalize))
+train_sample <- createDataPartition(y=data$addbudget, p=0.9, list = FALSE)
+data_train <- data_n[train_sample, ]
+data_test <- data_n[-train_sample, ]
+data_train_labels <- data$addbudget[train_sample]
+data_test_labels <- data$addbudget[-train_sample]
+data_test_pred <- knn(train=data_train, test=data_test, cl= data_train_labels, k= 93)
+confusionMatrix(as.factor(data_test_pred), as.factor(data_test_labels), positive= "NOB")
+data_z <- as.data.frame(scale(data[1:19]))
+data_train_z <- data_z[train_sample, ]
+data_test_z <- data_z[-train_sample, ]
+data_test_pred_z <- knn(train = data_train_z, test= data_test_z, cl =data_train_labels, k= 300)
+confusionMatrix(as.factor(data_test_pred_z), as.factor(data_test_labels), positive = "NOB")
