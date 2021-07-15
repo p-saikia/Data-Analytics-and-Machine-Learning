@@ -1,0 +1,61 @@
+rm (list=ls())
+cat("\014") 
+library(C50)
+library(lattice)
+library(ggplot2)
+library(caret)
+rm (list=ls())
+cat("\014") 
+data <- read.csv('data_set_1.csv')
+str(data)
+summary(data)
+data <- data[-c(1)]
+data$wind_speed[1]
+speed_min=min(data$wind_speed)
+speed_max=max(data$wind_speed)
+band=max(data$wind_speed)-min(data$wind_speed)
+data <- within(data, {   
+  speed.cat <- NA 
+  speed.cat[wind_speed < (speed_min+0.25*band)] <- "Low"
+  speed.cat[wind_speed >= (speed_min+0.25*band) & wind_speed < (speed_min+0.50*band)] <- "Middle"
+  speed.cat[wind_speed >= (speed_min+0.50*band)] <- "High"
+} ) 
+data <- within(data, {   
+  dir.cat <- NA 
+  dir.cat[22.5 <= wind_direction  & wind_direction< 67.5] <- 'NE'
+  dir.cat[67.5 <= wind_direction & wind_direction< 112.5] <- 'E'
+  dir.cat[112.5 <= wind_direction & wind_direction < 157.5] <- 'SE'
+  dir.cat[157.5 <= wind_direction & wind_direction < 202.5] <- 'S'
+  dir.cat[202.5 <= wind_direction & wind_direction < 247.5] <- 'SW'
+  dir.cat[247.5 <= wind_direction & wind_direction < 292.5] <- 'W'
+  dir.cat[292.5 <= wind_direction & wind_direction < 337.5] <- 'NW'
+  dir.cat[337.5 <= wind_direction & wind_direction <= 360] <- 'N'
+  dir.cat[0 <= wind_direction  & wind_direction < 22.5] <- 'N'
+  
+} )
+data <- data[-c(11,12)]
+data=data[complete.cases(data), ]
+summary(data)
+train_sample <- createDataPartition(y=data$speed.cat, p=0.8, list = FALSE)
+speed_train <- data[train_sample,]
+speed_test <- data[-train_sample,]
+speed_model <- C5.0(speed_train[-c(11,12)], as.factor(speed_train$speed.cat))
+summary(speed_model)
+plot(speed_model)
+speed_pred <- predict(speed_model, speed_test)
+confusionMatrix(as.factor(speed_pred), as.factor(speed_test$speed.cat), positive = "HIGH")
+speed_model_boost <- C5.0(speed_train[-c(11,12)], as.factor(speed_train$speed.cat), trials=5)
+summary(speed_model_boost)
+plot(speed_model_boost)
+speed_pred_boost <- predict(speed_model_boost, speed_test)
+confusionMatrix(as.factor(speed_pred_boost), as.factor(speed_test$speed.cat), positive = "HIGH")
+dir_model <- C5.0(speed_train[-c(11,12)], as.factor(speed_train$dir.cat))
+summary(dir_model)
+plot(dir_model)
+dir_pred <- predict(dir_model, speed_test)
+confusionMatrix(as.factor(dir_pred), as.factor(speed_test$dir.cat), positive = "HIGH")
+dir_model_boost <- C5.0(speed_train[-c(11,12)], as.factor(speed_train$dir.cat), trials=10)
+summary(dir_model_boost)
+plot(dir_model_boost)
+dir_pred_boost <- predict(dir_model_boost, speed_test)
+confusionMatrix(as.factor(dir_pred_boost), as.factor(speed_test$dir.cat), positive = "HIGH")
