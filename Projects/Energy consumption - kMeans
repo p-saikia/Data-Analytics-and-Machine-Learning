@@ -1,0 +1,34 @@
+library(factoextra)
+library(stats)
+rm (list=ls())
+cat("\014") 
+str(houses)
+summary(houses)
+houses <- read.csv("recs.csv")
+clusters_3 <- kmeans(houses, 3)
+clusters_3$size
+clusters_3$centers
+set.seed(123)
+clusters_4 <- kmeans(houses, 4)
+clusters_5 <- kmeans(houses, 5)
+clusters_6 <- kmeans(houses, 6)
+clusters_7 <- kmeans(houses, 7)
+clusters_8 <- kmeans(houses, 8)
+clusters_9 <- kmeans(houses, 9)
+clusters_10 <- kmeans(houses, 10)
+fviz_nbclust(houses, kmeans,method = "wss") +
+  geom_vline(xintercept = 4, linetype = 2)
+clusters_4$size
+clusters_4$centers
+clusters_5$size
+clusters_5$centers
+clusters_6$size
+clusters_6$centers
+clusters_7$size
+clusters_7$centers
+clusters_8$size
+clusters_8$centers
+clusters_9$size
+clusters_9$centers
+clusters_10$size
+clusters_10$centers
